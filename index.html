@@ -1,0 +1,802 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #game-root {
+    min-height: 600px;
+    background: #1a0e00;
+    color: #f0d080;
+    font-family: 'Cinzel', Georgia, serif;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen { display: none; padding: 24px 20px; min-height: 600px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ─── TITLE SCREEN ─── */
+  #screen-title {
+    background: radial-gradient(ellipse at 50% 30%, #2a1a00 0%, #0d0700 100%);
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .title-border {
+    border: 2px solid #a07020;
+    border-radius: 4px;
+    padding: 32px 28px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+  }
+  .title-border::before, .title-border::after {
+    content: '❖';
+    position: absolute;
+    color: #c89030;
+    font-size: 20px;
+  }
+  .title-border::before { top: 8px; left: 10px; }
+  .title-border::after { bottom: 8px; right: 10px; }
+  .game-title { font-family: 'Cinzel Decorative', serif; font-size: 28px; color: #e8b840; letter-spacing: 3px; line-height: 1.3; }
+  .game-subtitle { font-size: 13px; color: #a08040; letter-spacing: 4px; margin-top: 6px; }
+  .divider { width: 80%; height: 1px; background: linear-gradient(90deg, transparent, #a07020, transparent); margin: 12px auto; }
+  .date-range { font-size: 12px; color: #806030; letter-spacing: 2px; }
+  .start-btn {
+    margin-top: 20px;
+    padding: 12px 40px;
+    background: transparent;
+    border: 1.5px solid #c89030;
+    color: #e8b840;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    border-radius: 2px;
+  }
+  .start-btn:hover { background: #c89030; color: #1a0e00; }
+  .laurel-row { font-size: 22px; letter-spacing: 6px; color: #a07020; }
+
+  /* ─── EMPEROR SELECT ─── */
+  #screen-select {
+    background: #0d0700;
+    gap: 16px;
+  }
+  .select-title { font-size: 18px; color: #e8b840; letter-spacing: 3px; text-align: center; margin-top: 4px; }
+  .select-sub { font-size: 11px; color: #806030; letter-spacing: 2px; text-align: center; }
+  .emperors-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 8px;
+    width: 100%;
+    max-width: 700px;
+  }
+  .emperor-card {
+    background: #150c00;
+    border: 1.5px solid #6a4a10;
+    border-radius: 4px;
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    flex: 1 1 180px;
+    max-width: 200px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .emperor-card:hover { border-color: #c89030; background: #1e1100; }
+  .emperor-card canvas { image-rendering: pixelated; border: 1px solid #4a3000; }
+  .emperor-name { font-size: 15px; color: #e8b840; letter-spacing: 1px; }
+  .emperor-dates { font-size: 10px; color: #806030; letter-spacing: 1px; }
+  .emperor-role { font-size: 10px; color: #a07840; }
+
+  /* ─── STORY SCREEN ─── */
+  #screen-story {
+    background: #0a0500;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+  .story-header {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #3a2800;
+    padding-bottom: 10px;
+  }
+  .story-header canvas { image-rendering: pixelated; border: 1px solid #3a2800; flex-shrink: 0; }
+  .story-header-text { flex: 1; }
+  .story-emperor-name { font-size: 14px; color: #e8b840; letter-spacing: 1px; }
+  .story-level-badge { font-size: 10px; color: #806030; letter-spacing: 2px; margin-top: 2px; }
+  .back-btn {
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid #4a3000;
+    color: #806030;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .back-btn:hover { border-color: #a07020; color: #a07020; }
+
+  .scroll-box {
+    background: #120900;
+    border: 1px solid #3a2800;
+    border-radius: 4px;
+    padding: 18px 20px;
+    max-width: 640px;
+    width: 100%;
+    position: relative;
+  }
+  .scroll-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #6a4a10, #c89030, #6a4a10);
+    border-radius: 4px 4px 0 0;
+  }
+  .scene-title { font-size: 13px; color: #c89030; letter-spacing: 2px; margin-bottom: 8px; }
+  .scene-text { font-family: Georgia, serif; font-size: 13px; color: #d4a860; line-height: 1.8; }
+
+  .effect-box {
+    max-width: 640px;
+    width: 100%;
+    background: #0f0800;
+    border: 1px solid #3a2800;
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+  .effect-box.visible { display: flex; }
+  .effect-icon canvas { image-rendering: pixelated; }
+  .effect-text-area { flex: 1; }
+  .effect-label { font-size: 10px; color: #806030; letter-spacing: 2px; margin-bottom: 4px; }
+  .effect-desc { font-family: Georgia, serif; font-size: 12px; color: #b89050; line-height: 1.6; }
+
+  .choices-area {
+    max-width: 640px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .choice-btn {
+    background: #150c00;
+    border: 1px solid #4a3000;
+    color: #d4a860;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-align: left;
+    letter-spacing: 0.5px;
+    transition: border-color 0.15s, background 0.15s;
+    line-height: 1.5;
+  }
+  .choice-btn:hover { border-color: #c89030; background: #1e1100; color: #f0c870; }
+  .choice-btn.selected { border-color: #c89030; background: #201400; color: #f0c870; }
+
+  .next-btn {
+    margin-top: 4px;
+    padding: 10px 32px;
+    background: #2a1a00;
+    border: 1.5px solid #c89030;
+    color: #e8b840;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 2px;
+    display: none;
+    align-self: flex-end;
+  }
+  .next-btn:hover { background: #c89030; color: #1a0e00; }
+  .next-btn.visible { display: block; }
+
+  /* ─── ENDING SCREEN ─── */
+  #screen-end {
+    background: #0a0500;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .end-border {
+    border: 2px solid #a07020;
+    border-radius: 4px;
+    padding: 28px 24px;
+    max-width: 480px;
+    width: 100%;
+  }
+  .end-title { font-size: 20px; color: #e8b840; letter-spacing: 2px; }
+  .end-outcome { font-size: 13px; color: #c89030; letter-spacing: 1px; margin-top: 6px; }
+  .end-text { font-family: Georgia, serif; font-size: 13px; color: #a08040; line-height: 1.8; margin-top: 12px; }
+  .end-btns { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .end-btn {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #6a4a10;
+    color: #a07840;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .end-btn:hover { border-color: #c89030; color: #e8b840; }
+</style>
+
+<div id="game-root">
+
+  <!-- TITLE SCREEN -->
+  <div id="screen-title" class="screen active">
+    <div class="title-border">
+      <div class="laurel-row">🌿 🦅 🌿</div>
+      <div class="game-title">ROMA<br>AETERNA</div>
+      <div class="game-subtitle">AN INTERACTIVE CHRONICLE</div>
+      <div class="divider"></div>
+      <div class="date-range">316 BC · 14 AD · THE AGE OF EMPIRE</div>
+      <div style="font-family:Georgia,serif;font-size:12px;color:#6a4a10;margin-top:10px;line-height:1.7">
+        You are a Roman citizen, senator, and witness to history.<br>
+        Every choice shapes the fate of the Republic.
+      </div>
+      <button class="start-btn" onclick="showScreen('select')">BEGIN YOUR CHRONICLE ›</button>
+    </div>
+  </div>
+
+  <!-- EMPEROR SELECT SCREEN -->
+  <div id="screen-select" class="screen">
+    <div class="select-title">CHOOSE YOUR EMPEROR</div>
+    <div class="select-sub">SELECT A RULER · LIVE THEIR LEGACY</div>
+    <div class="divider" style="max-width:300px;width:80%"></div>
+    <div class="emperors-grid" id="emperors-grid"></div>
+  </div>
+
+  <!-- STORY SCREEN -->
+  <div id="screen-story" class="screen">
+    <div class="story-header" style="max-width:640px;width:100%">
+      <canvas id="story-portrait" width="48" height="48"></canvas>
+      <div class="story-header-text">
+        <div class="story-emperor-name" id="story-name"></div>
+        <div class="story-level-badge" id="story-level"></div>
+      </div>
+      <button class="back-btn" onclick="showScreen('select')">◂ CHOOSE ANOTHER</button>
+    </div>
+
+    <div class="scroll-box" style="max-width:640px;width:100%">
+      <div class="scene-title" id="scene-title"></div>
+      <div class="scene-text" id="scene-text"></div>
+    </div>
+
+    <div class="effect-box" id="effect-box">
+      <div class="effect-icon"><canvas id="effect-canvas" width="56" height="56"></canvas></div>
+      <div class="effect-text-area">
+        <div class="effect-label">CONSEQUENCE</div>
+        <div class="effect-desc" id="effect-desc"></div>
+      </div>
+    </div>
+
+    <div class="choices-area" id="choices-area"></div>
+    <button class="next-btn" id="next-btn" onclick="advanceScene()">CONTINUE ›</button>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="screen-end" class="screen">
+    <div class="end-border">
+      <div class="laurel-row" id="end-laurel">🌿 🦅 🌿</div>
+      <div class="end-title" id="end-title"></div>
+      <div class="end-outcome" id="end-outcome"></div>
+      <div class="divider"></div>
+      <div class="end-text" id="end-text"></div>
+      <div class="end-btns">
+        <button class="end-btn" onclick="showScreen('select')">CHOOSE ANOTHER EMPEROR</button>
+        <button class="end-btn" onclick="restartEmperor()">REPLAY THIS PATH</button>
+        <button class="end-btn" onclick="showScreen('title')">RETURN TO TITLE</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── PIXEL ART PAINTER ───
+function drawPixel(canvas, pixels, palette) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pH = pixels.length, pW = pixels[0].length;
+  const sw = W/pW, sh = H/pH;
+  ctx.clearRect(0,0,W,H);
+  for(let r=0;r<pH;r++) for(let c=0;c<pW;c++) {
+    const k = pixels[r][c];
+    if(k === '.') continue;
+    ctx.fillStyle = palette[k];
+    ctx.fillRect(Math.round(c*sw), Math.round(r*sh), Math.ceil(sw), Math.ceil(sh));
+  }
+}
+
+// Palettes
+const PAL = {
+  skin:'#D4956A', skin2:'#B87240', gold:'#D4A820', gold2:'#A07010',
+  white:'#F0E8D0', gray:'#888070', dkgray:'#504840', red:'#A02020',
+  purple:'#6030A0', brown:'#704020', lbrown:'#906040', dkbrown:'#3a2010',
+  blue:'#2040A0', lred:'#D03030', marble:'#E8DCC8', marbled:'#C8B898',
+  bg:'#1a0e00', gbg:'#2a1800', laurel:'#507020', lauld:'#304010',
+  silver:'#A0A898', bronze:'#886030', toga:'#E0D8C0', togaS:'#C0B8A0',
+  hlmet:'#B09050', hlmetd:'#806030', eye:'#3a2010', flesh2:'#C07848',
+  blk:'#201808'
+};
+
+// Augustus pixel art (18×20)
+const AUGUSTUS_PIX = [
+  ['.','.','.','.','.','g','g','g','g','g','g','g','.','.','.','.','.','.'],
+  ['.','.','.','.','g','G','G','G','G','G','G','G','g','.','.','.','.','.',],
+  ['.','.','.','g','G','G','G','G','G','G','G','G','G','g','.','.','.','.',],
+  ['.','.','.','g','G','G','s','s','s','s','s','G','G','g','.','.','.','.',],
+  ['.','.','.','g','G','s','k','k','k','k','k','s','G','g','.','.','.','.',],
+  ['.','.','.','g','G','s','k','S','S','S','k','s','G','g','.','.','.','.',],
+  ['.','.','.','.','.','s','k','e','S','e','k','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','k','k','n','k','k','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','k','k','k','k','k','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','.','s','s','s','.','.','.','.','.','.','.','.',],
+  ['.','.','T','T','T','T','T','T','T','T','T','T','T','T','.','.','.','.'],
+  ['.','T','T','T','T','t','t','t','t','t','t','T','T','T','T','.','.','.'],
+  ['T','T','T','t','t','t','t','t','t','t','t','t','T','T','T','T','.','.'],
+  ['T','T','t','t','t','t','t','t','t','t','t','t','t','T','T','T','.','.'],
+  ['T','t','t','t','t','t','t','t','t','t','t','t','t','t','T','T','.','.'],
+  ['.','.','T','T','T','T','T','T','T','T','T','T','T','T','.','.','.','.'],
+  ['.','.','.','.','.','.','p','p','p','p','.','.','.','.','.','.','.','.',],
+  ['.','.','.','.','.','.','p','L','L','p','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','p','L','L','p','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','p','p','p','p','.','.','.','.','.','.','.','.'],
+];
+const AUG_PAL = {g:PAL.gold,G:PAL.gold2,s:PAL.skin,S:PAL.white,k:PAL.skin2,e:PAL.eye,n:'#D08050',T:PAL.toga,t:PAL.togaS,p:'#A09080',L:'#806050'};
+
+// Nero pixel art (18×20)
+const NERO_PIX = [
+  ['.','.','.','.','.','.','.','R','R','R','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','R','r','r','r','R','.','.','.','.','.','.','.',],
+  ['.','.','.','.','.','R','r','r','r','r','r','R','.','.','.','.','.','.'],
+  ['.','.','.','.','R','r','r','r','r','r','r','r','R','.','.','.','.','.',],
+  ['.','.','.','.','.','s','f','f','f','f','f','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','f','W','W','W','f','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','f','e','W','e','f','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','f','f','m','f','f','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','s','f','f','f','f','f','s','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','.','.','s','.','.','.','.','.','.','.','.','.',],
+  ['.','.','.','.','P','P','P','P','P','P','P','P','P','.','.','.','.','.'],
+  ['.','.','.','P','P','p','p','p','p','p','p','P','P','P','.','.','.','.'],
+  ['.','.','P','P','p','p','p','p','p','p','p','p','P','P','P','.','.','.',],
+  ['.','.','P','p','p','p','p','p','p','p','p','p','p','P','P','.','.','.',],
+  ['.','.','P','p','p','p','p','p','p','p','p','p','p','P','P','.','.','.',],
+  ['.','.','.','.','P','P','P','P','P','P','P','P','P','.','.','.','.','.'],
+  ['.','.','.','.','.','.','B','B','B','B','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','B','b','b','B','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','B','b','b','B','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','B','B','B','B','.','.','.','.','.','.','.','.'],
+];
+const NERO_PAL = {R:PAL.gold,r:PAL.gold2,s:PAL.flesh2,f:PAL.skin2,W:PAL.white,e:'#303060',m:'#904040',P:PAL.purple,p:'#8040C0',B:PAL.brown,b:PAL.lbrown};
+
+// Constantine pixel art (18×20)
+const CONST_PIX = [
+  ['.','.','.','.','.','H','H','H','H','H','H','H','.','.','.','.','.','.'],
+  ['.','.','.','.','H','h','h','h','h','h','h','h','H','.','.','.','.','.',],
+  ['.','.','.','.','.','H','H','h','h','h','H','H','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','c','c','c','c','c','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','s','s','s','s','s','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','s','W','W','W','s','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','s','e','W','e','s','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','s','s','n','s','s','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','c','s','s','s','s','s','c','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','.','.','s','.','.','.','.','.','.','.','.','.',],
+  ['.','.','.','.','A','A','A','A','A','A','A','A','A','.','.','.','.','.'],
+  ['.','.','.','A','A','a','a','a','a','a','a','A','A','A','.','.','.','.'],
+  ['.','.','A','A','a','a','G','G','G','a','a','a','A','A','A','.','.','.',],
+  ['.','.','A','a','a','a','G','g','G','a','a','a','a','A','A','.','.','.',],
+  ['.','.','A','a','a','a','G','G','G','a','a','a','a','A','A','.','.','.',],
+  ['.','.','.','.','A','A','A','A','A','A','A','A','A','.','.','.','.','.'],
+  ['.','.','.','.','.','.','X','X','X','X','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','X','x','x','X','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','X','x','x','X','.','.','.','.','.','.','.','.'],
+  ['.','.','.','.','.','.','X','X','X','X','.','.','.','.','.','.','.','.'],
+];
+const CONST_PAL = {H:PAL.hlmet,h:PAL.hlmetd,c:PAL.bronze,s:PAL.skin,W:PAL.white,e:'#205040',n:'#C08060',A:'#3060A0',a:'#1040C0',G:PAL.gold,g:PAL.gold2,X:PAL.silver,x:'#808888'};
+
+// ─── ICON PIXEL ART ───
+const ICONS = {
+  senate: {
+    w:14,h:14,
+    p:['..MMMMMMMM..','..MPPPPPPM..','..MPMPMPMP..','MMMMMMMMMMMM','MPPPPPPPPPPPM','MPMMMMMMMPM','MPMPMPMPMPM','MPMPMPMPMPM','MPMPMPMPMPM','MMMMMMMMMMMM','..PPPPPPPP..','..PPPPPPPP..','..MMMMMMMM..','..............'],
+    c:{M:'#C0A060',P:'#E8D490'}
+  },
+  sword:{
+    w:14,h:14,
+    p:['......S.......','....SSS.......','....SHH.......','....SHH.......','...SHHH.......','..SHHHS.......','..SHHHS.......','..SHHHS.......','..SHHHS.......','..SHHHB.......','...SBBB.......','....BBB.......','....BBB.......','....BBB.......'],
+    c:{S:'#D0D8D0',H:'#A8B0A8',B:'#806030'}
+  },
+  fire:{
+    w:14,h:14,
+    p:['..............','......F.......','....FFFE......','...FFFFFE.....','...FFYFFE.....','..FFFYYFFF....','..FFYYYFFE....','..FFYYYFFE....','..FFFYYFFE....','...FFFFFFFE...','....FFFFFF....','....FFFFFF....','....FFFFF.....','..............'],
+    c:{F:'#D03010',f:'#A02008',Y:'#F0B030',E:'#F0D060'}
+  },
+  scroll:{
+    w:14,h:14,
+    p:['..RRRRRRRR..','..RPPPPPPR..','RRRPPPPPPRRR','RPPPPPPPPPPR','RPPPPPPPPPPR','RPPPPPPPPPPR','RPPPPPPPPPPR','RPPPPPPPPPPR','RPPPPPPPPPPR','RPPPPPPPPPPR','RRRPPPPPPRRR','..RPPPPPPR..','..RRRRRRRR..','..............'],
+    c:{R:'#A07840',P:'#F0E8C0'}
+  },
+  cross:{
+    w:14,h:14,
+    p:['....GGGG......','....GGGG......','....GGGG......','GGGGGGGGGGGGG.','GGGGGGGGGGGGG.','GGGGGGGGGGGGG.','GGGGGGGGGGGGG.','....GGGG......','....GGGG......','....GGGG......','....GGGG......','....GGGG......','....GGGG......','..............'],
+    c:{G:'#F0C840'}
+  },
+  crown:{
+    w:14,h:14,
+    p:['G...G...G.....','GG.GGG.GG.....','GGGGGGGGG.....','GGGGGGGGG.....','GGGGGGGGG.....','GGGGGGGGG.....','GGGGGGGGG.....','GGGGGGGGG.....','GGGGGGGGG.....','..............','..............','..............','..............','..............'],
+    c:{G:PAL.gold}
+  },
+  army:{
+    w:14,h:14,
+    p:['..SSSSS.......','..SXXSX.......','..SSSSS.......','..S.S.S.......','AAAAAAAAAAAAA.','AAAAAAAAAAAAA.','AAAAAAAAAAAAA.','..L...L.......','..L...L.......','..L...L.......','..L...L.......','..............','..............','..............'],
+    c:{S:'#D0D8D0',X:'#A82020',A:'#804020',L:'#503010'}
+  },
+  coin:{
+    w:14,h:14,
+    p:['....CCCCC.....','..CCCCCCCCC...','..CGGGGGGGC...','..CGGCGCGGC...','..CGGGGGGGC...','..CGCGGGGCG...','..CGGGCGGGG...','..CGGGGGGGC...','..CGGCGCGGC...','..CGGGGGGGC...','..CCCCCCCCC...','....CCCCC.....','..............','..............'],
+    c:{C:PAL.gold2,G:PAL.gold}
+  },
+  ship:{
+    w:14,h:14,
+    p:['....M.........','....MM........','....MMM.......','....MMMM......','....MMMMM.....','HHHHHHHHHHHH..','HHHHHHHHHHHH..','HHHHHHHHHHHH..','WWWWWWWWWWWWW.','BBBBBBBBBBBBB.','..............','..............','..............','..............'],
+    c:{M:'#E8D490',H:'#805030',W:'#2060A0',B:'#1040A0'}
+  },
+  lyre:{
+    w:14,h:14,
+    p:['..LLLLLLL.....','..LPPPPPLL....','..LPPPPPPL....','..LPPPPPPLL...','..LPPPPPPL....','..LSSSSSSSL...','..LSSSSSSSL...','..LLLLLLLLL...','..............','..............','..............','..............','..............','..............'],
+    c:{L:PAL.gold2,P:'#D4C480',S:PAL.gold}
+  },
+  build:{
+    w:14,h:14,
+    p:['....MMMMM.....','...MMMMMMM....','..MMMMMMMM....','..MWWMWWMM....','..MWWMWWMM....','..MMMMMMMMM...','..MWWWWWWMM...','..MWWWWWWMM...','..MWWWWWWMM...','BBBBBBBBBBBB..','BBBBBBBBBBBB..','..............','..............','..............'],
+    c:{M:PAL.marble,W:PAL.marbled,B:'#A08060'}
+  }
+};
+
+function drawIcon(canvas, iconKey) {
+  const icon = ICONS[iconKey];
+  if(!icon) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const rows=icon.p.length, cols=icon.p[0].length;
+  const sw=W/cols, sh=H/rows;
+  ctx.clearRect(0,0,W,H);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const k=icon.p[r][c];
+      if(k==='.' || k===' ') continue;
+      ctx.fillStyle = icon.c[k]||'#888';
+      ctx.fillRect(Math.round(c*sw),Math.round(r*sh),Math.ceil(sw),Math.ceil(sh));
+    }
+  }
+}
+
+// ─── GAME DATA ───
+const EMPERORS = [
+  {
+    id:'augustus',
+    name:'Augustus Caesar',
+    dates:'63 BC – 14 AD',
+    role:'First Emperor of Rome',
+    pix:AUGUSTUS_PIX, pal:AUG_PAL,
+    accentColor:'#D4A820',
+    chapters:[
+      {
+        title:'I · The Heir of Caesar',
+        text:'The year is 44 BC. Julius Caesar has been slain on the Ides of March. You, Gaius Octavius — Caesar\'s grand-nephew and adopted heir — must now choose your path. Rome is a powder keg of grief, ambition, and fury. Marc Antony controls the legions. Cicero holds the Senate. And you hold only a name.',
+        choices:[
+          {label:'Ally with the Senate against Marc Antony', effect:'Cicero champions you before the Senate. The old men love a pliable heir — for now. You gain political legitimacy but enemy powerful soldiers.', icon:'scroll'},
+          {label:'Negotiate secretly with Marc Antony', effect:'Antony underestimates you. Your private meeting reveals a sharp mind behind that young face. You form a fragile alliance forged in mutual suspicion.', icon:'sword'}
+        ]
+      },
+      {
+        title:'II · The Second Triumvirate',
+        text:'Together with Antony and Lepidus, you form the Second Triumvirate — three men ruling Rome as gods. But gods are jealous creatures. The proscriptions have silenced your enemies; Cicero\'s severed hands hang in the Forum. Now you divide the empire. Antony goes East to Cleopatra\'s court. What is your next move?',
+        choices:[
+          {label:'Consolidate power in the West — build loyalty with veterans', effect:'Your veterans receive land in Italy. Their devotion becomes your iron foundation. Roman citizens begin to see Octavian as a man of the people.', icon:'army'},
+          {label:'Pursue Sextus Pompey, who threatens Rome\'s grain supply', effect:'Your naval campaign is difficult but ultimate control of the grain routes makes you the savior of hungry Roman bellies — a priceless political currency.', icon:'ship'}
+        ]
+      },
+      {
+        title:'III · The Battle of Actium',
+        text:'31 BC. Antony has abandoned Rome for Cleopatra. He crowns her sons in gold. The Senate — your Senate — declares war on Egypt. At Actium\'s narrow straits, your fleets clash. Agrippa commands your ships magnificently. Antony and Cleopatra flee. Rome holds its breath. How do you seize this final victory?',
+        choices:[
+          {label:'Pursue them to Egypt and demand their surrender publicly', effect:'You stand in Alexandria before a fallen empire. Antony falls on his own sword. Cleopatra follows. Egypt becomes Rome\'s breadbasket — your breadbasket.', icon:'crown'},
+          {label:'Return to Rome and let their despair do your work', effect:'A masterstroke of patience. When news of their deaths reaches Rome, it comes as liberation — not conquest. You return as a savior, not a tyrant.', icon:'scroll'}
+        ]
+      },
+      {
+        title:'IV · The Age of Augustus',
+        text:'27 BC. The Senate offers you the title "Augustus" — the revered one. You accept, but you refuse the title of King. Instead you call yourself Princeps — First Citizen. You rebuild the Forum in marble, reform the legions, open the Ara Pacis. The Pax Romana begins. But absolute power has a price.',
+        choices:[
+          {label:'Embark on great building works to cement your legacy', effect:'You build 28 new temples, the Forum of Augustus, roads stretching to every corner of the empire. You say you found Rome in brick and left it in marble.', icon:'build'},
+          {label:'Reform Rome\'s laws and install loyal governors across the provinces', effect:'Your legal reforms echo through centuries. Tax collection becomes fairer. Provinces thrive under capable men loyal to Augustus. The machine of empire hums.', icon:'scroll'}
+        ]
+      }
+    ],
+    endings:{
+      glory:{title:'PATER PATRIAE',outcome:'Father of the Fatherland',text:'Augustus Caesar dies peacefully in 14 AD, age 76 — the longest reign of any Roman emperor. His last words: "Did I play my part well in the comedy of life? Then applaud as I exit." Rome would not see his like again for centuries.'},
+      conflict:{title:'THE IRON FIST',outcome:'Ruler by Strength',text:'Your reign is marked by military order and cold calculation. The Pax Romana holds through force of will. Rome expands, provinces submit, and when you die in 14 AD, your adopted son Tiberius inherits an empire built on discipline.'}
+    }
+  },
+
+  {
+    id:'nero',
+    name:'Nero Claudius Caesar',
+    dates:'37 AD – 68 AD',
+    role:'Fifth Emperor of Rome',
+    pix:NERO_PIX, pal:NERO_PAL,
+    accentColor:'#8040C0',
+    chapters:[
+      {
+        title:'I · The Young Emperor',
+        text:'54 AD. You are seventeen years old and Emperor of Rome. Your mother Agrippina whispers in one ear; your tutor Seneca in the other. The Praetorian Guard answers to whoever signs their pay. Claudius is barely cold. Rome watches a boy sitting on the throne of gods. What kind of ruler will Nero be?',
+        choices:[
+          {label:'Rule through your advisors — let Seneca and Burrus govern wisely', effect:'The first five years of your reign become known as the Quinquennium Neronis — Rome\'s most peaceful half-decade. Reforms flow, taxation eases, the arts flourish.', icon:'scroll'},
+          {label:'Assert your own will — reduce your mother\'s political influence', effect:'Agrippina is furious but impotent. You attend the Senate yourself. Senators are shocked to find the young emperor sharp-tongued and surprisingly shrewd.', icon:'crown'}
+        ]
+      },
+      {
+        title:'II · The Great Fire of Rome',
+        text:'64 AD. Fire tears through Rome for nine days, consuming ten of the city\'s fourteen districts. Rumors swirl — some say Nero ordered it to clear land for his golden palace, the Domus Aurea. Others say he sang while Rome burned. But the city needs a scapegoat, and the Christians are convenient. What do you do?',
+        choices:[
+          {label:'Blame the Christians and use the crisis to rebuild Rome grander than before', effect:'The persecution of Christians darkens your legacy for millennia. But Rome rises again — new streets, firebreaks, rebuilt temples. The Domus Aurea shimmers with gold.', icon:'fire'},
+          {label:'Open your own gardens to homeless Romans and organize relief', effect:'A surprising moment of genuine leadership. Ordinary Romans are grateful. You commission architects to rebuild with stone instead of timber. The future is fireproof.', icon:'build'}
+        ]
+      },
+      {
+        title:'III · The Artist Emperor',
+        text:'You have always loved art more than war. You perform on stage, race chariots, compose poetry. The senatorial class is horrified — no Roman nobleman should entertain the masses. But the people love the spectacle. Now you plan a grand tour of Greece, to compete in the Olympic Games. The Senate thinks you have lost your mind.',
+        choices:[
+          {label:'Compete in the Olympics — Rome\'s emperor on the world stage of culture', effect:'You win — though contestants suspiciously fall before you. Greece cheers. Rome cringes. But your lyre-playing becomes legendary. You are the emperor who sang.', icon:'lyre'},
+          {label:'Cancel the tour and attend to a conspiracy forming against you', effect:'The Pisonian Conspiracy is real. You uncover it just in time. Senators and generals are executed. You survive — but the court grows cold with fear and blood.', icon:'sword'}
+        ]
+      },
+      {
+        title:'IV · The Conspiracy and the Fall',
+        text:'68 AD. The legions in Gaul revolt under Galba. The Senate declares you a public enemy. Your guards abandon you. You flee Rome in the night, a former god hiding in a freedman\'s villa. The sound of horsemen grows closer. You must face the end of Nero.',
+        choices:[
+          {label:'Face the Senate — demand one last chance to speak in your own defense', effect:'They do not listen. But your eloquence is recorded. Later generations will remember the speech as magnificent — the final performance of a true artist-emperor.', icon:'scroll'},
+          {label:'Take your own life before they can drag you through the streets', effect:'You press the blade yourself, whispering: "What an artist dies with me." Your last words echo through centuries. Rome is never sure whether to mourn or celebrate.', icon:'fire'}
+        ]
+      }
+    ],
+    endings:{
+      glory:{title:'ARTIST OF ROME',outcome:'The Emperor Who Sang',text:'History judges Nero with contradictions — tyrant and artist, destroyer and builder. Suetonius condemns him; the poor of Rome mourned him. His golden palace became Trajan\'s baths. For three centuries after his death, men claiming to be Nero arose in the East. His legend refused to die.'},
+      conflict:{title:'THE LAST JULIO-CLAUDIAN',outcome:'End of a Dynasty',text:'Nero\'s death in 68 AD ended the Julio-Claudian dynasty begun by Augustus. The Year of the Four Emperors followed — Rome tearing itself apart. In the chaos, something essential about the old Republic died with him. The empire survived. But something was lost.'}
+    }
+  },
+
+  {
+    id:'constantine',
+    name:'Constantine the Great',
+    dates:'272 AD – 337 AD',
+    role:'First Christian Emperor',
+    pix:CONST_PIX, pal:CONST_PAL,
+    accentColor:'#3060A0',
+    chapters:[
+      {
+        title:'I · The Vision at Milvian Bridge',
+        text:'312 AD. You march on Rome to face your rival Maxentius. The night before battle, you receive a vision: a cross of light across the sun, and the words "In this sign, conquer." You order your soldiers to paint the Chi-Rho symbol on their shields. This single decision will reshape the entire world. But your generals are skeptical.',
+        choices:[
+          {label:'Order every soldier to bear the Christian symbol — total commitment', effect:'The gesture is absolute. Christian soldiers fight with extraordinary fervor. When Maxentius drowns in the Tiber, your men believe God has intervened. Constantine\'s faith is sealed.', icon:'cross'},
+          {label:'Incorporate the Chi-Rho beside Roman symbols — hedge your divine bets', effect:'Pragmatic genius. Traditional Romans and Christians both see their symbol. You win the battle of Milvian Bridge and the political battle of symbolism simultaneously.', icon:'army'}
+        ]
+      },
+      {
+        title:'II · The Edict of Milan',
+        text:'313 AD. You and Licinius issue the Edict of Milan — granting religious tolerance throughout the empire. Christians emerge from the catacombs. Three centuries of persecution end overnight. The Church is suddenly wealthy, powerful, and deeply grateful to you. But the old pagan temples still stand and old gods still have devotees. How do you proceed?',
+        choices:[
+          {label:'Lavish patronage on the Church — fund basilicas and councils', effect:'You build the Lateran Basilica, Old Saint Peter\'s, the Church of the Holy Sepulchre. Your name is written in stone across three continents. The Church calls you equal to the apostles.', icon:'build'},
+          {label:'Maintain official neutrality while personally favoring Christianity', effect:'A careful balance. Pagan traditions continue openly while Christianity grows in imperial favor. You are everyone\'s emperor — and keep the treasury from becoming a purely Christian institution.', icon:'scroll'}
+        ]
+      },
+      {
+        title:'III · The Council of Nicaea',
+        text:'325 AD. Christianity is dividing itself — Arius argues Christ is not fully divine; Athanasius insists he is. The quarrel threatens to split the empire along theological lines. You call 300 bishops to Nicaea and preside over the council yourself. The Nicene Creed that emerges will define Christian doctrine for all time. Your role in the debate is crucial.',
+        choices:[
+          {label:'Drive toward a single unified creed — banish Arius personally', effect:'The Nicene Creed is born. "God from God, Light from Light." Arianism is declared heresy. You have done what no emperor dared — defined what God is. Churches ring from Britain to Persia.', icon:'cross'},
+          {label:'Seek compromise — keep both factions within the imperial Church', effect:'The theological wounds fester but the empire stays whole. Your compromise buys peace for decades. Scholars will argue forever whether you understood the theology or merely managed it.', icon:'scroll'}
+        ]
+      },
+      {
+        title:'IV · Constantinople — The New Rome',
+        text:'330 AD. You dedicate a new capital on the Bosphorus — Constantinople, "the city of Constantine." It straddles Europe and Asia, commands the sea lanes, and has no pagan temples in its founding design. Rome in the West is old; this city is yours alone. You are building the future of civilization.',
+        choices:[
+          {label:'Design Constantinople as a purely Christian city from its foundations', effect:'No temples to Jupiter here. The Hagia Sophia will one day rise on this ground. You have planted a seed that will flower into the Byzantine Empire — lasting a thousand years after Rome\'s fall.', icon:'build'},
+          {label:'Model the new capital on Rome — forums, hippodromes, traditions', effect:'Constantinople becomes Rome perfected — the old traditions given new life in a strategic location. East and West meet here. The city you found will shape the medieval world entirely.', icon:'crown'}
+        ]
+      }
+    ],
+    endings:{
+      glory:{title:'EQUAL TO THE APOSTLES',outcome:'Father of Christian Rome',text:'Constantine is baptized on his deathbed in 337 AD, dying as a Christian. The Eastern Church canonizes him as a saint. His city, Constantinople, survives the fall of Western Rome by 1,000 years and falls only in 1453 to Ottoman cannon. He shaped the world we inherited.'},
+      conflict:{title:'THE SOLDIER-EMPEROR',outcome:'Rome Transformed by Will',text:'Constantine\'s reign transforms every institution of the Roman world. His military reforms, the new capital, the patronage of Christianity — each decision ripples outward for centuries. When he dies in 337 AD, the word "Roman" will never mean quite the same thing again.'}
+    }
+  }
+];
+
+// ─── STATE ───
+let state = {
+  emperor: null,
+  chapterIdx: 0,
+  choices: [],
+  selectedChoice: null
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(id === 'select') renderSelect();
+}
+
+// Draw emperor card portraits
+function renderSelect() {
+  const grid = document.getElementById('emperors-grid');
+  grid.innerHTML = '';
+  EMPERORS.forEach(emp => {
+    const card = document.createElement('div');
+    card.className = 'emperor-card';
+    card.onclick = () => startEmperor(emp.id);
+
+    const cvs = document.createElement('canvas');
+    cvs.width = 126; cvs.height = 140;
+    drawPixelScaled(cvs, emp.pix, emp.pal);
+
+    const name = document.createElement('div');
+    name.className = 'emperor-name';
+    name.textContent = emp.name;
+
+    const dates = document.createElement('div');
+    dates.className = 'emperor-dates';
+    dates.textContent = emp.dates;
+
+    const role = document.createElement('div');
+    role.className = 'emperor-role';
+    role.textContent = emp.role;
+
+    card.appendChild(cvs);
+    card.appendChild(name);
+    card.appendChild(dates);
+    card.appendChild(role);
+    grid.appendChild(card);
+  });
+}
+
+function drawPixelScaled(canvas, pixels, palette) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pH = pixels.length, pW = pixels[0].length;
+  const sw = W/pW, sh = H/pH;
+  ctx.clearRect(0,0,W,H);
+  for(let r=0;r<pH;r++){
+    for(let c=0;c<pW;c++){
+      const k = pixels[r][c];
+      if(k === '.') continue;
+      ctx.fillStyle = palette[k]||'#888';
+      ctx.fillRect(Math.round(c*sw), Math.round(r*sh), Math.ceil(sw), Math.ceil(sh));
+    }
+  }
+}
+
+function startEmperor(id) {
+  state.emperor = EMPERORS.find(e => e.id === id);
+  state.chapterIdx = 0;
+  state.choices = [];
+  state.selectedChoice = null;
+  showScreen('story');
+  renderStoryScreen();
+}
+
+function restartEmperor() {
+  if(state.emperor) startEmperor(state.emperor.id);
+}
+
+function renderStoryScreen() {
+  const emp = state.emperor;
+  const ch = emp.chapters[state.chapterIdx];
+
+  // Header portrait
+  const portrait = document.getElementById('story-portrait');
+  drawPixelScaled(portrait, emp.pix, emp.pal);
+
+  document.getElementById('story-name').textContent = emp.name.toUpperCase();
+  document.getElementById('story-level').textContent = `CHAPTER ${state.chapterIdx+1} OF ${emp.chapters.length}`;
+
+  document.getElementById('scene-title').textContent = ch.title;
+  document.getElementById('scene-text').textContent = ch.text;
+
+  // Hide effect
+  document.getElementById('effect-box').classList.remove('visible');
+  document.getElementById('effect-desc').textContent = '';
+
+  // Render choices
+  const area = document.getElementById('choices-area');
+  area.innerHTML = '';
+  state.selectedChoice = null;
+
+  ch.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = (i===0?'▸ ':'▸ ') + c.label;
+    btn.onclick = () => selectChoice(i, btn);
+    area.appendChild(btn);
+  });
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.classList.remove('visible');
+}
+
+function selectChoice(idx, btn) {
+  const emp = state.emperor;
+  const ch = emp.chapters[state.chapterIdx];
+  const choice = ch.choices[idx];
+  state.selectedChoice = idx;
+
+  // Visual selection
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // Show effect
+  const box = document.getElementById('effect-box');
+  document.getElementById('effect-desc').textContent = choice.effect;
+
+  const ecvs = document.getElementById('effect-canvas');
+  drawIcon(ecvs, choice.icon);
+
+  box.classList.add('visible');
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.classList.add('visible');
+  nextBtn.textContent = state.chapterIdx < emp.chapters.length-1 ? 'CONTINUE ›' : 'WITNESS YOUR LEGACY ›';
+}
+
+function advanceScene() {
+  if(state.selectedChoice === null) return;
+  state.choices.push(state.selectedChoice);
+  state.chapterIdx++;
+
+  if(state.chapterIdx >= state.emperor.chapters.length) {
+    showEnding();
+  } else {
+    state.selectedChoice = null;
+    renderStoryScreen();
+    document.getElementById('screen-story').scrollTop = 0;
+  }
+}
+
+function showEnding() {
+  showScreen('end');
+  const emp = state.emperor;
+  // Glory if more choices were "0" (first choice = peace/culture), else conflict
+  const gloryVotes = state.choices.filter(c => c===0).length;
+  const ending = gloryVotes >= 2 ? emp.endings.glory : emp.endings.conflict;
+
+  document.getElementById('end-laurel').textContent = emp.id==='nero' ? '🎭 🔥 🎭' : emp.id==='constantine' ? '✝ 🦅 ✝' : '🌿 🦅 🌿';
+  document.getElementById('end-title').textContent = ending.title;
+  document.getElementById('end-outcome').textContent = ending.outcome;
+  document.getElementById('end-text').textContent = ending.text;
+}
+
+// Boot
+showScreen('title');
+</script>
